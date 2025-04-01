@@ -12,9 +12,19 @@ import in.simplifymoney.successfulreferral.model.User;
 import in.simplifymoney.successfulreferral.repository.UserRepository;
 import in.simplifymoney.successfulreferral.service.UserService;
 import in.simplifymoney.successfulreferral.util.IdAndReferralCodeGenerator;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,5 +123,53 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userWhoReferred);
 
         return userMapper.userToUserResponseDto(savedUser);
+    }
+
+    @Override
+    public List<UserResponseDto> getReferrals(String userIdOrEmail) {
+        User referrerUser = userRepository.findByUserIdOrEmail(userIdOrEmail, userIdOrEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return userRepository.findAll().stream()
+                .filter(user -> referrerUser.getReferralCode().equals(user.getReferredBy()))
+                .map(userMapper::userToUserResponseDto)
+                .toList();
+    }
+
+    @Override
+    public byte[] generateReferralReportCSV(HttpServletResponse response) throws IOException {
+        List<User> users = userRepository.findAll();
+
+        // Create CSV data
+        StringBuilder csvData = new StringBuilder();
+        String[] headers = {"User ID", "Name", "Email", "Referral Code", "Referred By", "Referral Status", "Phone Number", "Address Line 1", "Address Line 2", "City", "State", "Country", "Zip Code", "Gender"};
+        csvData.append(String.join(",", headers)).append("\n");
+
+        for (User user : users) {
+            csvData.append(user.getUserId()).append(",")
+                    .append(user.getName()).append(",")
+                    .append(user.getEmail()).append(",")
+                    .append(user.getReferralCode()).append(",")
+                    .append(user.getReferredBy() != null ? user.getReferredBy() : "N/A").append(",")
+                    .append(user.getReferredStatus() != null ? user.getReferredStatus().name() : "N/A").append(",")
+                    .append(user.getPhoneNumber() != null ? user.getPhoneNumber() : "N/A").append(",")
+                    .append(user.getAddressLine1() != null ? user.getAddressLine1() : "N/A").append(",")
+                    .append(user.getAddressLine2() != null ? user.getAddressLine2() : "N/A").append(",")
+                    .append(user.getCity() != null ? user.getCity() : "N/A").append(",")
+                    .append(user.getState() != null ? user.getState() : "N/A").append(",")
+                    .append(user.getCountry() != null ? user.getCountry() : "N/A").append(",")
+                    .append(user.getZipCode() != null ? user.getZipCode() : "N/A").append(",")
+                    .append(user.getGender() != null ? user.getGender().name() : "N/A").append("\n");
+        }
+
+        // Set Response Headers
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=referral_report.csv");
+
+        // Write CSV data to response
+        byte[] csvBytes = csvData.toString().getBytes(StandardCharsets.UTF_8);
+        response.getOutputStream().write(csvBytes);
+
+        return csvBytes;
     }
 }
