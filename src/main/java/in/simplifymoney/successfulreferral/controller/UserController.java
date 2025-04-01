@@ -4,6 +4,7 @@ import in.simplifymoney.successfulreferral.dto.UserProfileCompleteRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.Response;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -49,6 +51,12 @@ public class UserController {
     public ResponseEntity<List<UserResponseDto>> getUserReferrals(@PathVariable String userIdOrEmail) {
         List<UserResponseDto> userResponseDtoList =  userService.getReferrals(userIdOrEmail);
         return ResponseEntity.status(HttpStatus.OK).body(userResponseDtoList);
+    }
+
+    @GetMapping("/export-referral-report")
+    public ResponseEntity<byte[]> exportReferralReport(HttpServletResponse response) throws IOException {
+        byte[] report = userService.generateReferralReportCSV(response);
+        return ResponseEntity.status(HttpStatus.OK).body(report);
     }
 
 }
