@@ -114,21 +114,26 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setProfileCompleted(true);
-        user.setReferredStatus(ReferredStatus.SUCCESSFUL);
-        User savedUser = userRepository.save(user);
 
-        // Update the user who referred this user
-        User userWhoReferred = userRepository.findByReferralCode(savedUser.getReferredBy())
-                .orElseThrow(() -> new InvalidReferralCodeException("User not found"));
+        if(!user.getReferredStatus().equals(ReferredStatus.NOT_REFERRED)) {
 
-        userWhoReferred.setTotalReferrals(userWhoReferred.getTotalReferrals() + 1);
-        List<String> referredUsers = userWhoReferred.getReferredUsers();
-        referredUsers.add(user.getUserId());
+            user.setReferredStatus(ReferredStatus.SUCCESSFUL);
+            User savedUser = userRepository.save(user);
 
-        userWhoReferred.setReferredUsers(referredUsers);
-        userRepository.save(userWhoReferred);
+            // Update the user who referred this user
+            User userWhoReferred = userRepository.findByReferralCode(savedUser.getReferredBy())
+                    .orElseThrow(() -> new InvalidReferralCodeException("User not found"));
 
-        return userMapper.userToUserResponseDto(savedUser);
+            userWhoReferred.setTotalReferrals(userWhoReferred.getTotalReferrals() + 1);
+            List<String> referredUsers = userWhoReferred.getReferredUsers();
+            referredUsers.add(user.getUserId());
+
+            userWhoReferred.setReferredUsers(referredUsers);
+            userRepository.save(userWhoReferred);
+        } else {
+            userRepository.save(user);
+        }
+        return userMapper.userToUserResponseDto(user);
     }
 
     @Override
