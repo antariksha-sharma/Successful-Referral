@@ -1,5 +1,6 @@
 package in.simplifymoney.successfulreferral.controller;
 
+import in.simplifymoney.successfulreferral.dto.UserProfileCompleteRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.service.UserService;
@@ -22,7 +23,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> saveUser(@RequestBody UserRequestDto userRequestDto) {
-        UserResponseDto userResponseDto = userService.saveUser(userRequestDto);
+        UserResponseDto userResponseDto = userService.registerUser(userRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDto);
     }
 
@@ -30,5 +31,13 @@ public class UserController {
     public ResponseEntity<UserResponseDto> getUserByIdOrEmail(@PathVariable String idOrEmail) {
         UserResponseDto userResponseDto = userService.getUserByIdOrEmail(idOrEmail);
         return ResponseEntity.status(HttpStatus.FOUND).body(userResponseDto);
+    }
+
+    @PostMapping("/complete-profile/{idOrEmail}")
+    public ResponseEntity<UserResponseDto> completeProfile(
+            @PathVariable String idOrEmail,
+            @RequestBody UserProfileCompleteRequestDto userProfileCompleteRequestDto) {
+        UserResponseDto userResponseDto = userService.completeUserProfile(idOrEmail, userProfileCompleteRequestDto);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponseDto);
     }
 }

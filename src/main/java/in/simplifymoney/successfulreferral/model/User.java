@@ -1,8 +1,12 @@
 package in.simplifymoney.successfulreferral.model;
 
+import in.simplifymoney.successfulreferral.enums.Gender;
+import in.simplifymoney.successfulreferral.enums.ReferredStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -48,4 +52,33 @@ public class User {
 
     @Column(name = "referred_by")
     private String referredBy;
+
+    @Column(name = "referred_status")
+    @Enumerated(EnumType.STRING)
+    private ReferredStatus referredStatus;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "address_line1")
+    private String addressLine1;
+
+    @Column(name = "address_line2")
+    private String addressLine2;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "country")
+    private String country;
+
+    @Column(name = "zip_code")
+    private String zipCode;
+
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 }
