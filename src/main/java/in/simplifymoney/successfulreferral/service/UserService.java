@@ -1,9 +1,10 @@
 package in.simplifymoney.successfulreferral.service;
 
-import in.simplifymoney.successfulreferral.model.User;
+import in.simplifymoney.successfulreferral.dto.UserRequestDto;
+import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 
 public interface UserService {
-    User saveUser(User user);
+    UserResponseDto saveUser(UserRequestDto userRequestDto);
 
-    User getUserByIdOrEmail(String idOrEmail);
+    UserResponseDto getUserByIdOrEmail(String idOrEmail);
 }

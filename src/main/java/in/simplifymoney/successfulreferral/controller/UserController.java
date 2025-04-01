@@ -1,8 +1,10 @@
 package in.simplifymoney.successfulreferral.controller;
 
-import in.simplifymoney.successfulreferral.model.User;
+import in.simplifymoney.successfulreferral.dto.UserRequestDto;
+import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,12 +21,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> saveUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.saveUser(user));
+    public ResponseEntity<UserResponseDto> saveUser(@RequestBody UserRequestDto userRequestDto) {
+        UserResponseDto userResponseDto = userService.saveUser(userRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDto);
     }
 
     @GetMapping("/{idOrEmail}")
-    public ResponseEntity<User> getUserByIdOrEmail(@PathVariable String idOrEmail) {
-        return ResponseEntity.ok(userService.getUserByIdOrEmail(idOrEmail));
+    public ResponseEntity<UserResponseDto> getUserByIdOrEmail(@PathVariable String idOrEmail) {
+        UserResponseDto userResponseDto = userService.getUserByIdOrEmail(idOrEmail);
+        return ResponseEntity.status(HttpStatus.FOUND).body(userResponseDto);
     }
 }
