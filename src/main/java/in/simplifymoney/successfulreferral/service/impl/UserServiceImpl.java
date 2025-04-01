@@ -4,6 +4,7 @@ import in.simplifymoney.successfulreferral.dto.UserProfileCompleteRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.enums.Gender;
+import in.simplifymoney.successfulreferral.enums.ReferredStatus;
 import in.simplifymoney.successfulreferral.exception.DuplicateEntryException;
 import in.simplifymoney.successfulreferral.exception.InvalidReferralCodeException;
 import in.simplifymoney.successfulreferral.exception.UserNotFoundException;
@@ -53,6 +54,10 @@ public class UserServiceImpl implements UserService {
         if(user.getReferredBy() != null) {
             userRepository.findByReferralCode(user.getReferredBy())
                     .orElseThrow(() -> new InvalidReferralCodeException("Invalid Referral Code"));
+
+            user.setReferredStatus(ReferredStatus.PENDING);
+        } else {
+            user.setReferredStatus(ReferredStatus.NOT_REFERRED);
         }
 
         User savedUser = userRepository.save(user);
@@ -109,6 +114,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setProfileCompleted(true);
+        user.setReferredStatus(ReferredStatus.SUCCESSFUL);
         User savedUser = userRepository.save(user);
 
         // Update the user who referred this user
@@ -131,7 +137,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return userRepository.findAll().stream()
-                .filter(user -> referrerUser.getReferralCode().equals(user.getReferredBy()))
+                .filter(user -> referrerUser.getReferralCode().equals(user.getReferredBy()) && user.getReferredStatus() == ReferredStatus.SUCCESSFUL)
                 .map(userMapper::userToUserResponseDto)
                 .toList();
     }
