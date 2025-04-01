@@ -114,4 +114,15 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.userToUserResponseDto(savedUser);
     }
+
+    @Override
+    public List<UserResponseDto> getReferrals(String userIdOrEmail) {
+        User referrerUser = userRepository.findByUserIdOrEmail(userIdOrEmail, userIdOrEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return userRepository.findAll().stream()
+                .filter(user -> referrerUser.getReferralCode().equals(user.getReferredBy()))
+                .map(userMapper::userToUserResponseDto)
+                .toList();
+    }
 }
