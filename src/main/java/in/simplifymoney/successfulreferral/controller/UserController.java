@@ -4,6 +4,7 @@ import in.simplifymoney.successfulreferral.dto.UserProfileCompleteRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> saveUser(@RequestBody UserRequestDto userRequestDto) {
+    public ResponseEntity<UserResponseDto> saveUser(@RequestBody @Valid UserRequestDto userRequestDto) {
         UserResponseDto userResponseDto = userService.registerUser(userRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDto);
     }
@@ -30,13 +31,13 @@ public class UserController {
     @GetMapping("/{idOrEmail}")
     public ResponseEntity<UserResponseDto> getUserByIdOrEmail(@PathVariable String idOrEmail) {
         UserResponseDto userResponseDto = userService.getUserByIdOrEmail(idOrEmail);
-        return ResponseEntity.status(HttpStatus.FOUND).body(userResponseDto);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponseDto);
     }
 
     @PostMapping("/complete-profile/{idOrEmail}")
     public ResponseEntity<UserResponseDto> completeProfile(
             @PathVariable String idOrEmail,
-            @RequestBody UserProfileCompleteRequestDto userProfileCompleteRequestDto) {
+            @RequestBody @Valid UserProfileCompleteRequestDto userProfileCompleteRequestDto) {
         UserResponseDto userResponseDto = userService.completeUserProfile(idOrEmail, userProfileCompleteRequestDto);
         return ResponseEntity.status(HttpStatus.OK).body(userResponseDto);
     }

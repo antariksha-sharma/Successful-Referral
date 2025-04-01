@@ -4,6 +4,9 @@ import in.simplifymoney.successfulreferral.dto.UserProfileCompleteRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserRequestDto;
 import in.simplifymoney.successfulreferral.dto.UserResponseDto;
 import in.simplifymoney.successfulreferral.enums.Gender;
+import in.simplifymoney.successfulreferral.exception.DuplicateEntryException;
+import in.simplifymoney.successfulreferral.exception.InvalidReferralCodeException;
+import in.simplifymoney.successfulreferral.exception.UserNotFoundException;
 import in.simplifymoney.successfulreferral.mapper.UserMapper;
 import in.simplifymoney.successfulreferral.model.User;
 import in.simplifymoney.successfulreferral.repository.UserRepository;
@@ -13,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @Service
@@ -25,13 +29,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto registerUser(UserRequestDto userRequestDto) {
 
+        Optional<User> userFoundByUserIdOrEmail = userRepository.findByUserIdOrEmail(userRequestDto.getEmail(), userRequestDto.getEmail());
+
+        if(userFoundByUserIdOrEmail.isPresent()) {
+            throw new DuplicateEntryException("User exists with the entered id or e-mail");
+        }
+
         User user = userMapper.userRequestDtoToUser(userRequestDto);
 
         user.setUserId(IdAndReferralCodeGenerator.generateId());
         user.setReferralCode(IdAndReferralCodeGenerator.generateReferralCode());
 
         if(user.getReferredBy() != null) {
-            userRepository.findByReferralCode(user.getReferredBy()).orElseThrow(() -> new RuntimeException("User not found"));
+            userRepository.findByReferralCode(user.getReferredBy())
+                    .orElseThrow(() -> new InvalidReferralCodeException("Invalid Referral Code"));
         }
 
         User savedUser = userRepository.save(user);
@@ -43,16 +54,17 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto getUserByIdOrEmail(String idOrEmail) {
         return userRepository.findByUserIdOrEmail(idOrEmail, idOrEmail)
                 .map(userMapper::userToUserResponseDto)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     @Override
     public UserResponseDto completeUserProfile(String idOrEmail, UserProfileCompleteRequestDto userProfileCompleteRequestDto) {
         if(idOrEmail == null || idOrEmail.isEmpty()) {
-            throw new RuntimeException("User id/e-mail cannot be null or empty");
+            throw new NullPointerException("User id/e-mail cannot be null or empty");
         }
 
-        User user = userRepository.findByUserIdOrEmail(idOrEmail, idOrEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUserIdOrEmail(idOrEmail, idOrEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if(userProfileCompleteRequestDto.getAddressLine1() != null || !userProfileCompleteRequestDto.getAddressLine1().isEmpty()) {
             user.setAddressLine1(userProfileCompleteRequestDto.getAddressLine1());
@@ -90,7 +102,8 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         // Update the user who referred this user
-        User userWhoReferred = userRepository.findByReferralCode(savedUser.getReferredBy()).orElseThrow(() -> new RuntimeException("User not found"));
+        User userWhoReferred = userRepository.findByReferralCode(savedUser.getReferredBy())
+                .orElseThrow(() -> new InvalidReferralCodeException("User not found"));
 
         userWhoReferred.setTotalReferrals(userWhoReferred.getTotalReferrals() + 1);
         List<String> referredUsers = userWhoReferred.getReferredUsers();
