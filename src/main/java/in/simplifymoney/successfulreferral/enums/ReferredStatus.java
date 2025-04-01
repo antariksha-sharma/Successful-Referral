@@ -3,5 +3,5 @@ package in.simplifymoney.successfulreferral.enums;
 public enum ReferredStatus {
     PENDING,
     SUCCESSFUL,
-    FAILED
+    NOT_REFERRED
 }
